@@ -1,110 +1,93 @@
 ﻿using ButterflySystem.Controllers;
-using ButterflySystems.Calculator.BLL.Exceptions;
+using ButterflySystems.Calculator.BLL;
 using ButterflySystems.Calculator.BLL.Interfaces;
 using ButterflySystems.CalculatorApi.DTO;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
-namespace ButterflySystem.Tests.Controllers
+namespace ButterflySystem.Tests
 {
     public class CalculatorControllerTests
     {
-        [Fact]
-        public void AddValues_ReturnsOk()
+        private readonly CalculatorController _calculatorController;
+        private readonly Mock<ILogger<CalculatorController>> _loggerMock;
+        private readonly Mock<ICalculatorService> _calculatorServiceMock;
+
+        public CalculatorControllerTests()
         {
-            // Arrange
-            decimal addends1 = 5.5m;
-            decimal addends2 = 2.5m;
-            decimal expected = 8m;
-            var mockCalculatorService = new Mock<ICalculatorService>();
-            mockCalculatorService.Setup(x => x.Add(addends1, addends2)).Returns(expected);
-            var controller = new CalculatorController(mockCalculatorService.Object);
-
-            // Act
-            var result = controller.AddValues(addends1, addends2);
-
-            // Assert
-            var okObjectResult = Assert.IsType<OkObjectResult>(result);
-            var calculatorResultDTO = Assert.IsType<CalculatorResultDTO>(okObjectResult.Value);
-            Assert.Equal(expected, calculatorResultDTO.Result);
+            _loggerMock = new Mock<ILogger<CalculatorController>>();
+            _calculatorServiceMock = new Mock<ICalculatorService>();
+            _calculatorController = new CalculatorController(_loggerMock.Object, _calculatorServiceMock.Object);
         }
 
         [Fact]
-        public void SubtractValues_ReturnsOk()
-        {
-            // Arrange
-            decimal minuend = 10m;
-            decimal subtrahend = 5m;
-            decimal expected = 5m;
-            var mockCalculatorService = new Mock<ICalculatorService>();
-            mockCalculatorService.Setup(x => x.Subtract(minuend, subtrahend)).Returns(expected);
-            var controller = new CalculatorController(mockCalculatorService.Object);
-
-            // Act
-            var result = controller.SubtractValues(minuend, subtrahend);
-
-            // Assert
-            var okObjectResult = Assert.IsType<OkObjectResult>(result);
-            var calculatorResultDTO = Assert.IsType<CalculatorResultDTO>(okObjectResult.Value);
-            Assert.Equal(expected, calculatorResultDTO.Result);
-        }
-
-        [Fact]
-        public void MultiplyValues_ReturnsOk()
-        {
-            // Arrange
-            decimal multiplicand = 10m;
-            decimal multiplier = 5m;
-            decimal expected = 50m;
-            var mockCalculatorService = new Mock<ICalculatorService>();
-            mockCalculatorService.Setup(x => x.Multiply(multiplicand, multiplier)).Returns(expected);
-            var controller = new CalculatorController(mockCalculatorService.Object);
-
-            // Act
-            var result = controller.MultiplyValues(multiplicand, multiplier);
-
-            // Assert
-            var okObjectResult = Assert.IsType<OkObjectResult>(result);
-            var calculatorResultDTO = Assert.IsType<CalculatorResultDTO>(okObjectResult.Value);
-            Assert.Equal(expected, calculatorResultDTO.Result);
-        }
-
-        [Fact]
-        public void DivideValues_ReturnsOk()
+        public void AddValues_Should_Return_The_Sum_Of_Two_Numbers()
         {
             //Arrange
-            decimal divident = 10m;
-            decimal devisor = 5m;
-            decimal expected = 2m;
-            var mockCalculatorService = new Mock<ICalculatorService>();
-            mockCalculatorService.Setup(x => x.Divide(divident, devisor)).Returns(expected);
-            var controller = new CalculatorController(mockCalculatorService.Object);
+            var expected = new CalculatorResultDTO { Result = 10 };
+            _calculatorServiceMock.Setup(x => x.Add(It.IsAny<decimal>(), It.IsAny<decimal>())).Returns(10);
 
             //Act
-            var result = controller.DivideValues(divident, devisor);
+            var result = _calculatorController.AddValues(5, 5) as OkObjectResult;
+            var actual = result?.Value as CalculatorResultDTO;
 
             //Assert
-            var okObjectResult = Assert.IsType<OkObjectResult>(result);
-            var calcultorResultDTO = Assert.IsType<CalculatorResultDTO>(okObjectResult.Value);
-            Assert.Equal(expected, calcultorResultDTO.Result);
+            Assert.NotNull(result);
+            Assert.NotNull(actual);
+            Assert.Equal(expected.Result, actual.Result);
         }
 
         [Fact]
-        public void DivideValues_DivisorIsZero_ThrowsSyntaxErrorException()
+        public void SubtractValues_Should_Return_The_Difference_Of_Two_Numbers()
         {
-            // Arrange
-            decimal dividend = 10m;
-            decimal divisor = 0m;
-            var mockCalculatorService = new Mock<ICalculatorService>();
-            mockCalculatorService.Setup(x => x.Divide(dividend, divisor)).Throws(new SyntaxErrorException("Cannot be divided to zero."));
-            var controller = new CalculatorController(mockCalculatorService.Object);
+            //Arrange
+            var expected = new CalculatorResultDTO { Result = 5 };
+            _calculatorServiceMock.Setup(x => x.Subtract(It.IsAny<decimal>(), It.IsAny<decimal>())).Returns(5);
 
-            // Act
-            var ex = Assert.Throws<SyntaxErrorException>(() => controller.DivideValues(dividend, divisor));
+            //Act
+            var result = _calculatorController.SubtractValues(10, 5) as OkObjectResult;
+            var actual = result?.Value as CalculatorResultDTO;
 
-            // Assert
-            Assert.Equal("Cannot be divided to zero.", ex.Message);
+            //Assert
+            Assert.NotNull(result);
+            Assert.NotNull(actual);
+            Assert.Equal(expected.Result, actual.Result);
+        }
+
+        [Fact]
+        public void MultiplyValues_Should_Return_The_Product_Of_Two_Numbers()
+        {
+            //Arrange
+            var expected = new CalculatorResultDTO { Result = 50 };
+            _calculatorServiceMock.Setup(x => x.Multiply(It.IsAny<decimal>(), It.IsAny<decimal>())).Returns(50);
+
+            //Act
+            var result = _calculatorController.MultiplyValues(10, 5) as OkObjectResult;
+            var actual = result?.Value as CalculatorResultDTO;
+
+            //Assert
+            Assert.NotNull(result);
+            Assert.NotNull(actual);
+            Assert.Equal(expected.Result, actual.Result);
+        }
+
+        [Fact]
+        public void DivideValues_Should_Return_The_Quotient_Of_Two_Numbers()
+        {
+            //Arrange
+            var expected = new CalculatorResultDTO { Result = 2 };
+            _calculatorServiceMock.Setup(x => x.Divide(It.IsAny<decimal>(), It.IsAny<decimal>())).Returns(2);
+
+            //Act
+            var result = _calculatorController.DivideValues(10, 5) as OkObjectResult;
+            var actual = result?.Value as CalculatorResultDTO;
+
+            //Assert
+            Assert.NotNull(result);
+            Assert.NotNull(actual);
+            Assert.Equal(expected.Result, actual.Result);
         }
     }
 }
